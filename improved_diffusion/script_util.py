@@ -14,6 +14,8 @@ def model_and_diffusion_defaults():
     """
     return dict(
         image_size=64,
+        in_channels=3,
+        out_channels=3,
         num_channels=128,
         num_res_blocks=2,
         num_heads=4,
@@ -37,6 +39,8 @@ def model_and_diffusion_defaults():
 
 def create_model_and_diffusion(
     image_size,
+    in_channels,
+    out_channels,
     class_cond,
     learn_sigma,
     sigma_small,
@@ -60,6 +64,8 @@ def create_model_and_diffusion(
         image_size,
         num_channels,
         num_res_blocks,
+        in_channels=in_channels,
+        out_channels=out_channels,
         learn_sigma=learn_sigma,
         class_cond=class_cond,
         use_checkpoint=use_checkpoint,
@@ -87,6 +93,8 @@ def create_model(
     image_size,
     num_channels,
     num_res_blocks,
+    in_channels,
+    out_channels,
     learn_sigma,
     class_cond,
     use_checkpoint,
@@ -98,6 +106,8 @@ def create_model(
 ):
     if image_size == 256:
         channel_mult = (1, 1, 2, 2, 4, 4)
+    elif image_size == 128:
+        channel_mult = (1, 1, 2, 2, 4) # can change (1, 1, 2, 2, 3, 3)
     elif image_size == 64:
         channel_mult = (1, 2, 3, 4)
     elif image_size == 32:
@@ -110,9 +120,9 @@ def create_model(
         attention_ds.append(image_size // int(res))
 
     return UNetModel(
-        in_channels=3,
+        in_channels=in_channels,
         model_channels=num_channels,
-        out_channels=(3 if not learn_sigma else 6),
+        out_channels=(out_channels if not learn_sigma else out_channels * 2),
         num_res_blocks=num_res_blocks,
         attention_resolutions=tuple(attention_ds),
         dropout=dropout,
