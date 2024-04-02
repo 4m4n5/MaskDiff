@@ -27,8 +27,8 @@ def main():
     # Set up logging
     logger.configure()
     logger.log("creating model and diffusion...")    
-    if utils.is_main_process():
-        wandb.init(project="MaskDiff", config=vars(config))
+    # if dist_util.is_main_process():
+    #     wandb.init(project="MaskDiff", config=vars(config))
 
     # Create model and data
     model, diffusion = create_model_and_diffusion(
