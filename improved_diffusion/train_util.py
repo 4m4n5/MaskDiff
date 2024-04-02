@@ -46,7 +46,8 @@ class TrainLoop:
         schedule_sampler=None,
         weight_decay=0.0,
         lr_anneal_steps=0,
-    ):
+    ):  
+        self.config = config
         self.model = model
         self.diffusion = diffusion
         self.data = data
@@ -97,8 +98,8 @@ class TrainLoop:
             self.use_ddp = True
             self.ddp_model = DDP(
                 self.model,
-                device_ids=[config.gpu],
-                output_device=config.gpu,
+                device_ids=[self.config.gpu],
+                output_device=self.config.gpu,
                 broadcast_buffers=False,
                 bucket_cap_mb=128,
                 find_unused_parameters=False,
@@ -121,7 +122,7 @@ class TrainLoop:
                 logger.log(f"loading model from checkpoint: {resume_checkpoint}...")
                 self.model.load_state_dict(
                     dist_util.load_state_dict(
-                        resume_checkpoint, map_location=config.gpu
+                        resume_checkpoint, map_location=self.config.gpu
                     )
                 )
 
@@ -136,7 +137,7 @@ class TrainLoop:
             if dist.get_rank() == 0:
                 logger.log(f"loading EMA from checkpoint: {ema_checkpoint}...")
                 state_dict = dist_util.load_state_dict(
-                    ema_checkpoint, map_location=config.gpu
+                    ema_checkpoint, map_location=self.config.gpu
                 )
                 ema_params = self._state_dict_to_master_params(state_dict)
 
@@ -151,7 +152,7 @@ class TrainLoop:
         if bf.exists(opt_checkpoint):
             logger.log(f"loading optimizer state from checkpoint: {opt_checkpoint}")
             state_dict = dist_util.load_state_dict(
-                opt_checkpoint, map_location=config.gpu
+                opt_checkpoint, map_location=self.config.gpu
             )
             self.opt.load_state_dict(state_dict)
 
@@ -189,13 +190,13 @@ class TrainLoop:
     def forward_backward(self, batch, cond):
         zero_grad(self.model_params)
         for i in range(0, batch.shape[0], self.microbatch):
-            micro = batch[i : i + self.microbatch].to(config.gpu)
+            micro = batch[i : i + self.microbatch].to(self.config.gpu)
             micro_cond = {
-                k: v[i : i + self.microbatch].to(config.gpu)
+                k: v[i : i + self.microbatch].to(self.config.gpu)
                 for k, v in cond.items()
             }
             last_batch = (i + self.microbatch) >= batch.shape[0]
-            t, weights = self.schedule_sampler.sample(micro.shape[0], config.gpu)
+            t, weights = self.schedule_sampler.sample(micro.shape[0], self.config.gpu)
 
             compute_losses = functools.partial(
                 self.diffusion.training_losses,
