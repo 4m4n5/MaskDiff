@@ -54,6 +54,7 @@ def main():
         model=model,
         diffusion=diffusion,
         data=data,
+        config=args,
         batch_size=args.batch_size,
         microbatch=args.microbatch,
         lr=args.lr,
