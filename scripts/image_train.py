@@ -19,14 +19,23 @@ from improved_diffusion.train_util import TrainLoop
 def main():
     args = create_argparser().parse_args()
 
-    dist_util.setup_dist()
-    logger.configure()
+    # Set up distributed training
+    utils.init_distributed_mode(args)
+    device = torch.device(args.device)
 
-    logger.log("creating model and diffusion...")
+    # Set up logging
+    logger.configure()
+    logger.log("creating model and diffusion...")    
+    if utils.is_main_process():
+        wandb.init(project="MaskDiff", config=vars(config))
+
+    # Create model and data
     model, diffusion = create_model_and_diffusion(
         **args_to_dict(args, model_and_diffusion_defaults().keys())
     )
-    model.to(dist_util.dev())
+    if args.distributed:
+        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu])
+    # model.to(dist_util.dev())
     schedule_sampler = create_named_schedule_sampler(args.schedule_sampler, diffusion)
 
     logger.log("creating data loader...")
@@ -72,6 +81,12 @@ def create_argparser():
         resume_checkpoint="",
         use_fp16=False,
         fp16_scale_growth=1e-3,
+        # Distributed training parameters
+        device="cuda",
+        seed=42,
+        world_size=1,
+        dist_url="env://",
+        distributed=True,
     )
     defaults.update(model_and_diffusion_defaults())
     parser = argparse.ArgumentParser()
