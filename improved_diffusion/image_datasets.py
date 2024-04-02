@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader, Dataset
 
 
 def load_data(
-    *, data_dir, batch_size, image_size, class_cond=False, deterministic=False
+    *, data_dir, batch_size, image_size, class_cond=False, deterministic=False, config={}
 ):
     """
     For a dataset, create a generator over (images, kwargs) pairs.
@@ -30,7 +30,11 @@ def load_data(
         train_transforms = torchvision.transforms.Compose([T.ToTensor()])
         all_files = _list_image_files_recursively(os.path.join(data_dir, "classes", "train"))
         dataset = NucleiMaskDataset(
-            mask_paths=all_files, resolution=(image_size, image_size), is_train=True
+            mask_paths=all_files, 
+            resolution=(image_size, image_size), 
+            is_train=True,
+            shard=config.rank,
+            num_shards=config.world_size,
         )
     else:
         all_files = _list_image_files_recursively(data_dir)
@@ -45,8 +49,8 @@ def load_data(
             image_size,
             all_files,
             classes=classes,
-            shard=0,
-            num_shards=1,
+            shard=config.rank,
+            num_shards=config.world_size,
         )
     if deterministic:
         loader = DataLoader(
