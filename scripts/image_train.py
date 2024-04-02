@@ -20,7 +20,7 @@ def main():
     args = create_argparser().parse_args()
 
     # Set up distributed training
-    utils.init_distributed_mode(args)
+    dist_util.init_distributed_mode(args)
     device = torch.device(args.device)
 
     # Set up logging
