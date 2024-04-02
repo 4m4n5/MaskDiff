@@ -26,21 +26,28 @@ def load_data(
     """
     if not data_dir:
         raise ValueError("unspecified data directory")
-    all_files = _list_image_files_recursively(data_dir)
-    classes = None
-    if class_cond:
-        # Assume classes are the first part of the filename,
-        # before an underscore.
-        class_names = [bf.basename(path).split("_")[0] for path in all_files]
-        sorted_classes = {x: i for i, x in enumerate(sorted(set(class_names)))}
-        classes = [sorted_classes[x] for x in class_names]
-    dataset = ImageDataset(
-        image_size,
-        all_files,
-        classes=classes,
-        shard=MPI.COMM_WORLD.Get_rank(),
-        num_shards=MPI.COMM_WORLD.Get_size(),
-    )
+    if "lizard" in data_dir:
+        train_transforms = torchvision.transforms.Compose([T.ToTensor()])
+        all_files = _list_image_files_recursively(os.path.join(data_dir, "classes", "train"))
+        dataset = NucleiMaskDataset(
+            mask_paths=all_files, resolution=(image_size, image_size), is_train=True
+        )
+    else:
+        all_files = _list_image_files_recursively(data_dir)
+        classes = None
+        if class_cond:
+            # Assume classes are the first part of the filename,
+            # before an underscore.
+            class_names = [bf.basename(path).split("_")[0] for path in all_files]
+            sorted_classes = {x: i for i, x in enumerate(sorted(set(class_names)))}
+            classes = [sorted_classes[x] for x in class_names]
+        dataset = ImageDataset(
+            image_size,
+            all_files,
+            classes=classes,
+            shard=MPI.COMM_WORLD.Get_rank(),
+            num_shards=MPI.COMM_WORLD.Get_size(),
+        )
     if deterministic:
         loader = DataLoader(
             dataset, batch_size=batch_size, shuffle=False, num_workers=1, drop_last=True
@@ -64,6 +71,50 @@ def _list_image_files_recursively(data_dir):
             results.extend(_list_image_files_recursively(full_path))
     return results
 
+
+class NucleiMaskDataset(torch.utils.data.Dataset):
+    def __init__(
+        self,
+        mask_paths,
+        resolution,
+        shard=0,
+        num_shards=1,
+        random_crop=True,
+        random_flip=True,
+        is_train=True,
+    ):
+        super().__init__()
+        self.is_train = is_train
+        self.resolution = resolution
+        self.local_masks = mask_paths[shard:][::num_shards]
+        self.random_crop = random_crop
+        self.random_flip = random_flip
+
+    def __len__(self):
+        return len(self.local_masks)
+
+    def __getitem__(self, idx):
+        out_dict = {}
+        
+        # Load mask
+        path = self.local_masks[idx]
+        with bf.BlobFile(path, "rb") as f:
+            pil_mask = Image.open(f)
+            pil_mask.load()
+        pil_mask = pil_mask.convert("L")
+
+        # Resize mask
+        arr_mask = resize_arr(pil_mask, self.resolution)
+
+        # Random flip
+        if self.random_flip and random.random() < 0.5:
+            arr_mask = arr_mask[:, ::-1].copy()
+
+        arr_mask = arr_mask[None, ]
+
+        # Return Image
+        return arr_mask
+        
 
 class ImageDataset(Dataset):
     def __init__(self, resolution, image_paths, classes=None, shard=0, num_shards=1):
