@@ -72,7 +72,7 @@ def _list_image_files_recursively(data_dir):
     return results
 
 
-class NucleiMaskDataset(torch.utils.data.Dataset):
+class NucleiMaskDataset(Dataset):
     def __init__(
         self,
         mask_paths,
