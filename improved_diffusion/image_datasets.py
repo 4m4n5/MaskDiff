@@ -45,8 +45,8 @@ def load_data(
             image_size,
             all_files,
             classes=classes,
-            shard=MPI.COMM_WORLD.Get_rank(),
-            num_shards=MPI.COMM_WORLD.Get_size(),
+            shard=0,
+            num_shards=1,
         )
     if deterministic:
         loader = DataLoader(
@@ -114,7 +114,7 @@ class NucleiMaskDataset(torch.utils.data.Dataset):
 
         # Return Image
         return arr_mask
-        
+
 
 class ImageDataset(Dataset):
     def __init__(self, resolution, image_paths, classes=None, shard=0, num_shards=1):
