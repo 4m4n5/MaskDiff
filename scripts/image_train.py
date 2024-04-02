@@ -14,6 +14,7 @@ from improved_diffusion.script_util import (
     add_dict_to_argparser,
 )
 from improved_diffusion.train_util import TrainLoop
+import torch
 
 
 def main():
