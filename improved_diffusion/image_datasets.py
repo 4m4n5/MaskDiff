@@ -28,7 +28,7 @@ def load_data(
         raise ValueError("unspecified data directory")
     if "lizard" in data_dir:
         train_transforms = torchvision.transforms.Compose([T.ToTensor()])
-        all_files = _list_image_files_recursively(os.path.join(data_dir, "classes", "train"))
+        all_files = _list_image_files_recursively(os.path.join(data_dir, "classes"))
         dataset = NucleiMaskDataset(
             mask_paths=all_files, 
             resolution=(image_size, image_size), 
