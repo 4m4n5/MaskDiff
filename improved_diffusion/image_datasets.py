@@ -123,8 +123,8 @@ class NucleiMaskDataset(Dataset):
         arr_mask = resize_arr(pil_mask, self.resolution)
 
         # Random flip
-        if self.random_flip and random.random() < 0.5:
-            arr_mask = arr_mask[:, ::-1].copy()
+        # if self.random_flip and random.random() < 0.5:
+        #     arr_mask = arr_mask[:, ::-1].copy()
 
         arr_mask = arr_mask[None, None, ]
 
