@@ -124,7 +124,7 @@ class NucleiMaskDataset(Dataset):
         arr_mask = arr_mask[None, ]
 
         # Return Image
-        return arr_mask
+        return arr_mask, out_dict
 
 
 class ImageDataset(Dataset):
