@@ -106,7 +106,7 @@ class NucleiMaskDataset(Dataset):
 
     def __getitem__(self, idx):
         out_dict = {}
-        
+        import pdb; pdb.set_trace()
         # Load mask
         path = self.local_masks[idx]
         with bf.BlobFile(path, "rb") as f:
