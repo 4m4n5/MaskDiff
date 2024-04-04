@@ -134,12 +134,13 @@ class NucleiMaskDataset(Dataset):
         input_mask = torch.FloatTensor(bs, nc, ht, wt).zero_()
         input_mask = input_mask.scatter_(1, mask_tensor, 1.0)
 
+        import pdb; pdb.set_trace()
         # Get condition
         cond = torch.sum(torch.sum(input_mask, dim=2), dim=2).bool().int().float()
         out_dict["y"] = cond
         
         # Return Image
-        return arr_mask, out_dict
+        return input_mask, out_dict
 
 
 class ImageDataset(Dataset):
