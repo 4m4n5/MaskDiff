@@ -111,7 +111,6 @@ class NucleiMaskDataset(Dataset):
 
     def __getitem__(self, idx):
         out_dict = {}
-        import pdb; pdb.set_trace()
         # Load mask
         path = self.local_masks[idx]
         with bf.BlobFile(path, "rb") as f:
@@ -137,7 +136,8 @@ class NucleiMaskDataset(Dataset):
 
         # Get condition
         cond = torch.sum(torch.sum(input_mask, dim=2), dim=2).bool().int().float()
-
+        out_dict["y"] = cond
+        
         # Return Image
         return arr_mask, out_dict
 
