@@ -32,7 +32,8 @@ def load_data(
         all_files = _list_image_files_recursively(os.path.join(data_dir, "classes"))
         dataset = NucleiMaskDataset(
             mask_paths=all_files, 
-            resolution=(image_size, image_size), 
+            resolution=(image_size, image_size),
+            num_classes=7, 
             is_train=True,
             shard=config.rank,
             num_shards=config.world_size,
@@ -89,6 +90,7 @@ class NucleiMaskDataset(Dataset):
         self,
         mask_paths,
         resolution,
+        num_classes=7,
         shard=0,
         num_shards=1,
         random_crop=True,
@@ -101,6 +103,7 @@ class NucleiMaskDataset(Dataset):
         self.local_masks = mask_paths[shard:][::num_shards]
         self.random_crop = random_crop
         self.random_flip = random_flip
+        self.num_classes = num_classes
 
     def __len__(self):
         return len(self.local_masks)
@@ -123,6 +126,16 @@ class NucleiMaskDataset(Dataset):
             arr_mask = arr_mask[:, ::-1].copy()
 
         arr_mask = arr_mask[None, ]
+
+        # To tensor
+        mask_tensor = torch.from_numpy(arr_mask).long()
+        _, ht, wt = mask_tensor.size()
+        nc = self.num_classes
+        input_mask = torch.FloatTensor(nc, ht, wt).zero_()
+        input_mask = input_mask.scatter_(1, mask_tensor, 1.0)
+
+        # Get condition
+        cond = torch.sum(torch.sum(input_mask, dim=2), dim=2).bool().int().float()
 
         # Return Image
         return arr_mask, out_dict
