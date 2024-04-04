@@ -76,6 +76,12 @@ def _list_image_files_recursively(data_dir):
     return results
 
 
+def resize_arr(pil_class, image_size, keep_aspect=True):
+    pil_class = pil_class.resize(image_size, resample=Image.NEAREST)
+    arr_class = np.array(pil_class)
+    return arr_class
+
+
 class NucleiMaskDataset(Dataset):
     def __init__(
         self,
