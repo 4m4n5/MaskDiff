@@ -53,13 +53,14 @@ def load_data(
             shard=config.rank,
             num_shards=config.world_size,
         )
+    # Number of workers is set to 0 for debugging otherwise 1
     if deterministic:
         loader = DataLoader(
-            dataset, batch_size=batch_size, shuffle=False, num_workers=1, drop_last=True
+            dataset, batch_size=batch_size, shuffle=False, num_workers=0, drop_last=True
         )
     else:
         loader = DataLoader(
-            dataset, batch_size=batch_size, shuffle=True, num_workers=1, drop_last=True
+            dataset, batch_size=batch_size, shuffle=True, num_workers=0, drop_last=True
         )
     while True:
         yield from loader
