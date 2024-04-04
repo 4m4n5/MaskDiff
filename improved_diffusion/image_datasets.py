@@ -126,13 +126,13 @@ class NucleiMaskDataset(Dataset):
         if self.random_flip and random.random() < 0.5:
             arr_mask = arr_mask[:, ::-1].copy()
 
-        arr_mask = arr_mask[None, ]
+        arr_mask = arr_mask[None, None, ]
 
         # To tensor
         mask_tensor = torch.from_numpy(arr_mask).long()
-        _, ht, wt = mask_tensor.size()
+        bs, _, ht, wt = mask_tensor.size()
         nc = self.num_classes
-        input_mask = torch.FloatTensor(nc, ht, wt).zero_()
+        input_mask = torch.FloatTensor(bs, nc, ht, wt).zero_()
         input_mask = input_mask.scatter_(1, mask_tensor, 1.0)
 
         # Get condition
