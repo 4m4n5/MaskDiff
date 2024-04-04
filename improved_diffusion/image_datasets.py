@@ -132,11 +132,10 @@ class NucleiMaskDataset(Dataset):
         bs, _, ht, wt = mask_tensor.size()
         nc = self.num_classes
         input_mask = torch.FloatTensor(bs, nc, ht, wt).zero_()
-        input_mask = input_mask.scatter_(1, mask_tensor, 1.0)
+        input_mask = input_mask.scatter_(1, mask_tensor, 1.0).squeeze(0)
 
-        import pdb; pdb.set_trace()
         # Get condition
-        cond = torch.sum(torch.sum(input_mask, dim=2), dim=2).bool().int().float()
+        cond = torch.sum(torch.sum(input_mask, dim=2), dim=2).bool().int().float().squeeze(0)
         out_dict["y"] = cond
         
         # Return Image
