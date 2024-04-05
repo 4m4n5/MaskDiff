@@ -341,7 +341,8 @@ class UNetModel(nn.Module):
         )
 
         if self.num_classes is not None:
-            self.label_emb = nn.Embedding(num_classes, time_embed_dim)
+            # self.label_emb = nn.Embedding(num_classes, time_embed_dim)
+            self.label_emb = nn.Linear(num_classes, time_embed_dim)
 
         self.input_blocks = nn.ModuleList(
             [
