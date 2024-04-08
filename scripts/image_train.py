@@ -29,7 +29,7 @@ def main():
     keys_to_include = {'image_size', 'diffusion_steps', 'num_res_blocks', 'num_channels', 'noise_schedule', 'lr', 'batch_size'}
 
     # Combine specified keys and values into a string
-    identifier = '__'.join([f"{key}_{getattr(namespace, key)}" for key in vars(namespace) if key in keys_to_include])
+    identifier = '__'.join([f"{key}_{getattr(args, key)}" for key in vars(args) if key in keys_to_include])
     save_dir = f"{args.save_dir}/{identifier}"
 
     # Set up logging
