@@ -19,6 +19,7 @@ from .fp16_util import (
 )
 from .nn import update_ema
 from .resample import LossAwareSampler, UniformSampler
+import wandb
 
 # For ImageNet experiments, this was a good default value.
 # We found that the lg_loss_scale quickly climbed to
@@ -168,8 +169,9 @@ class TrainLoop:
             batch, cond = next(self.data)
             self.run_step(batch, cond)
             if self.step % self.log_interval == 0:
-                import pdb; pdb.set_trace()
                 logger.dumpkvs()
+                if dist.get_rank() == 0:
+                    wandb.log(dict(logger.getkvs()))
             if self.step % self.save_interval == 0:
                 self.save()
                 # Run for a finite amount of time in integration tests.

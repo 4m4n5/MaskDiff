@@ -25,8 +25,15 @@ def main():
     dist_util.init_distributed_mode(args)
     device = torch.device(args.device)
 
+    # Specify the keys you want to include
+    keys_to_include = {'image_size', 'diffusion_steps', 'num_res_blocks', 'num_channels', 'noise_schedule', 'lr', 'batch_size'}
+
+    # Combine specified keys and values into a string
+    identifier = '__'.join([f"{key}_{value}" for key, value in args.items() if key in keys_to_include])
+    save_dir = f"{args.save_dir}/{identifier}"
+
     # Set up logging
-    logger.configure()
+    logger.configure(dir=save_dir)
     logger.log("creating model and diffusion...")    
     if dist_util.is_main_process():
         wandb.init(project="MaskDiff", config=args)
@@ -81,6 +88,7 @@ def create_argparser():
         ema_rate="0.9999",  # comma-separated list of EMA values
         log_interval=10,
         save_interval=100,
+        save_dir="/scratch/as3ek/github/MaskDiff/saves",
         resume_checkpoint="",
         use_fp16=False,
         fp16_scale_growth=1e-3,
