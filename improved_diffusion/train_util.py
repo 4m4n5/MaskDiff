@@ -168,6 +168,7 @@ class TrainLoop:
             batch, cond = next(self.data)
             self.run_step(batch, cond)
             if self.step % self.log_interval == 0:
+                import pdb; pdb.set_trace()
                 logger.dumpkvs()
             if self.step % self.save_interval == 0:
                 self.save()
@@ -188,7 +189,6 @@ class TrainLoop:
         self.log_step()
 
     def forward_backward(self, batch, cond):
-        # import pdb; pdb.set_trace()
         zero_grad(self.model_params)
         for i in range(0, batch.shape[0], self.microbatch):
             micro = batch[i : i + self.microbatch].to(self.config.gpu)

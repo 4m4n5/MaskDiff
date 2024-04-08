@@ -15,6 +15,7 @@ from improved_diffusion.script_util import (
 )
 from improved_diffusion.train_util import TrainLoop
 import torch
+import wandb
 
 
 def main():
@@ -27,8 +28,8 @@ def main():
     # Set up logging
     logger.configure()
     logger.log("creating model and diffusion...")    
-    # if dist_util.is_main_process():
-    #     wandb.init(project="MaskDiff", config=vars(config))
+    if dist_util.is_main_process():
+        wandb.init(project="MaskDiff", config=args)
 
     # Create model and data
     model, diffusion = create_model_and_diffusion(
@@ -36,9 +37,6 @@ def main():
     )
 
     model.to(device)
-    # if args.distributed:
-    #     model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu])
-    # model.to(dist_util.dev())
     schedule_sampler = create_named_schedule_sampler(args.schedule_sampler, diffusion)
 
     logger.log("creating data loader...")
