@@ -171,6 +171,7 @@ class TrainLoop:
             if self.step % self.log_interval == 0:
                 logger.dumpkvs()
                 if dist.get_rank() == 0:
+                    import pdb; pdb.set_trace()
                     wandb.log(dict(logger.getkvs()))
             if self.step % self.save_interval == 0:
                 self.save()
