@@ -169,10 +169,9 @@ class TrainLoop:
             batch, cond = next(self.data)
             self.run_step(batch, cond)
             if self.step % self.log_interval == 0:
-                logger.dumpkvs()
                 if dist.get_rank() == 0:
-                    import pdb; pdb.set_trace()
                     wandb.log(dict(logger.getkvs()))
+                logger.dumpkvs()
             if self.step % self.save_interval == 0:
                 self.save()
                 # Run for a finite amount of time in integration tests.
