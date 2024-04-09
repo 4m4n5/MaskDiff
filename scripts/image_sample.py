@@ -27,7 +27,7 @@ def num_classes_to_labels(num_classes = 7):
     # Convert class labels to one-hot tensors
     one_hot_labels = [torch.tensor(label) for label in all_labels]
 
-    return torch.stack(one_hot_labels)
+    return torch.stack(one_hot_labels).float()
 
 
 def main():
