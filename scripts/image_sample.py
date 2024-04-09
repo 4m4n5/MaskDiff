@@ -9,10 +9,11 @@ import os
 import numpy as np
 import torch as th
 import torch.distributed as dist
+import torch
+import itertools
 
 from improved_diffusion import dist_util, logger
 from improved_diffusion.script_util import (
-    NUM_CLASSES,
     model_and_diffusion_defaults,
     create_model_and_diffusion,
     add_dict_to_argparser,
@@ -20,20 +21,39 @@ from improved_diffusion.script_util import (
 )
 
 
+def num_classes_to_labels(num_classes = 7):
+    # Generate all possible combinations of class labels
+    all_labels = list(itertools.product([0, 1], repeat=num_classes))
+    # Convert class labels to one-hot tensors
+    one_hot_labels = [torch.tensor(label) for label in all_labels]
+
+    return torch.stack(one_hot_labels)
+
+
 def main():
     args = create_argparser().parse_args()
 
-    dist_util.setup_dist()
-    logger.configure()
+    dist_util.init_distributed_mode(args)
+    device = torch.device(args.device)
 
+    # Specify the keys you want to include
+    keys_to_include = {'image_size', 'diffusion_steps', 'num_res_blocks', 'num_channels', 'noise_schedule', 'lr', 'batch_size'}
+
+    # Combine specified keys and values into a string
+    identifier = '__'.join([f"{key}_{getattr(args, key)}" for key in vars(args) if key in keys_to_include])
+    save_dir = f"{args.save_dir}/{identifier}"
+
+    # Set up logging
+    logger.configure(dir=save_dir)
     logger.log("creating model and diffusion...")
+
     model, diffusion = create_model_and_diffusion(
         **args_to_dict(args, model_and_diffusion_defaults().keys())
     )
     model.load_state_dict(
         dist_util.load_state_dict(args.model_path, map_location="cpu")
     )
-    model.to(dist_util.dev())
+    model.to(device)
     model.eval()
 
     logger.log("sampling...")
@@ -42,16 +62,13 @@ def main():
     while len(all_images) * args.batch_size < args.num_samples:
         model_kwargs = {}
         if args.class_cond:
-            classes = th.randint(
-                low=0, high=NUM_CLASSES, size=(args.batch_size,), device=dist_util.dev()
-            )
-            model_kwargs["y"] = classes
+            model_kwargs["y"] = num_classes_to_labels(args.num_classes)
         sample_fn = (
             diffusion.p_sample_loop if not args.use_ddim else diffusion.ddim_sample_loop
         )
         sample = sample_fn(
             model,
-            (args.batch_size, 3, args.image_size, args.image_size),
+            (args.batch_size, args.num_classes, args.image_size, args.image_size),
             clip_denoised=args.clip_denoised,
             model_kwargs=model_kwargs,
         )
@@ -91,10 +108,16 @@ def main():
 def create_argparser():
     defaults = dict(
         clip_denoised=True,
-        num_samples=10000,
-        batch_size=16,
+        num_samples=1280,
+        batch_size=128,
         use_ddim=False,
         model_path="",
+        # Distributed training parameters
+        device="cuda",
+        seed=42,
+        world_size=1,
+        dist_url="env://",
+        distributed=True,
     )
     defaults.update(model_and_diffusion_defaults())
     parser = argparse.ArgumentParser()
