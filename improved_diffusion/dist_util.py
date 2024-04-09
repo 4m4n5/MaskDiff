@@ -50,16 +50,28 @@ def dev():
     return th.device("cpu")
 
 
+def broadcast_data(data, rank=0):
+    # Initialize the distributed process group
+    dist.init_process_group(backend='nccl', init_method='tcp://localhost:29500', rank=rank, world_size=1)
+
+    # Broadcast the data from the specified rank to all processes
+    dist.broadcast(data, src=rank)
+
+    # Cleanup
+    dist.destroy_process_group()
+
+
 def load_state_dict(path, **kwargs):
     """
     Load a PyTorch file without redundant fetches across MPI ranks.
     """
-    if MPI.COMM_WORLD.Get_rank() == 0:
+    if get_rank() == 0:
         with bf.BlobFile(path, "rb") as f:
             data = f.read()
     else:
         data = None
-    data = MPI.COMM_WORLD.bcast(data)
+    # data = MPI.COMM_WORLD.bcast(data)
+    data = broadcast_data(data, rank=0)
     return th.load(io.BytesIO(data), **kwargs)
 
 
