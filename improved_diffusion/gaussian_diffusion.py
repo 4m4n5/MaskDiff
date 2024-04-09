@@ -395,7 +395,7 @@ class GaussianDiffusion:
         denoised_fn=None,
         model_kwargs=None,
         device=None,
-        progress=False,
+        progress=True,
     ):
         """
         Generate samples from the model.
@@ -437,7 +437,7 @@ class GaussianDiffusion:
         denoised_fn=None,
         model_kwargs=None,
         device=None,
-        progress=False,
+        progress=True,
     ):
         """
         Generate samples from the model and yield intermediate samples from
@@ -568,7 +568,7 @@ class GaussianDiffusion:
         denoised_fn=None,
         model_kwargs=None,
         device=None,
-        progress=False,
+        progress=True,
         eta=0.0,
     ):
         """
@@ -600,7 +600,7 @@ class GaussianDiffusion:
         denoised_fn=None,
         model_kwargs=None,
         device=None,
-        progress=False,
+        progress=True,
         eta=0.0,
     ):
         """
