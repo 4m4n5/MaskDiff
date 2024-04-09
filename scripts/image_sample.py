@@ -36,12 +36,8 @@ def main():
     dist_util.init_distributed_mode(args)
     device = torch.device(args.device)
 
-    # Specify the keys you want to include
-    keys_to_include = {'image_size', 'diffusion_steps', 'num_res_blocks', 'num_channels', 'noise_schedule', 'lr', 'batch_size'}
-
-    # Combine specified keys and values into a string
-    identifier = '__'.join([f"{key}_{getattr(args, key)}" for key in vars(args) if key in keys_to_include])
-    save_dir = f"{dict(args).save_dir}/{identifier}"
+    
+    save_dir = args.model_path.replace(".pt", "_samples")
 
     # Set up logging
     logger.configure(dir=save_dir)
