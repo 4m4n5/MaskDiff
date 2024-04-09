@@ -75,9 +75,9 @@ def main():
         all_images.extend([sample.cpu().numpy() for sample in gathered_samples])
         if args.class_cond:
             gathered_labels = [
-                th.zeros_like(classes) for _ in range(dist.get_world_size())
+                th.zeros_like(model_kwargs["y"]) for _ in range(dist.get_world_size())
             ]
-            dist.all_gather(gathered_labels, classes)
+            dist.all_gather(gathered_labels, model_kwargs["y"])
             all_labels.extend([labels.cpu().numpy() for labels in gathered_labels])
         logger.log(f"created {len(all_images) * args.batch_size} samples")
 
