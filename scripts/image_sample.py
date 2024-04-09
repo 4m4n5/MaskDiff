@@ -56,7 +56,7 @@ def main():
     while len(all_images) * args.batch_size < args.num_samples:
         model_kwargs = {}
         if args.class_cond:
-            model_kwargs["y"] = num_classes_to_labels(args.num_classes)
+            model_kwargs["y"] = num_classes_to_labels(args.num_classes).to(device)
         sample_fn = (
             diffusion.p_sample_loop if not args.use_ddim else diffusion.ddim_sample_loop
         )
