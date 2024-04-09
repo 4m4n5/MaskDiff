@@ -62,6 +62,7 @@ def load_state_dict(path, **kwargs):
     """
     Load a PyTorch file without redundant fetches across MPI ranks.
     """
+    import pdb; pdb.set_trace()
     if dist.get_rank() == 0:
         with bf.BlobFile(path, "rb") as f:
             data = f.read()
