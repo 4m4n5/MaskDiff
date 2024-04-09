@@ -51,9 +51,6 @@ def dev():
 
 
 def broadcast_data(data, rank=0):
-    # Initialize the distributed process group
-    dist.init_process_group(backend='nccl', init_method='tcp://localhost:29500', rank=rank, world_size=1)
-
     # Broadcast the data from the specified rank to all processes
     dist.broadcast(data, src=rank)
 
@@ -71,7 +68,7 @@ def load_state_dict(path, **kwargs):
     else:
         data = None
     # data = MPI.COMM_WORLD.bcast(data)
-    data = broadcast_data(data, rank=0)
+    data = sync_params(data)
     return th.load(io.BytesIO(data), **kwargs)
 
 
