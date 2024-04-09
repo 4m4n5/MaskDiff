@@ -70,7 +70,7 @@ def load_state_dict(path, **kwargs):
         data = None
     # data = MPI.COMM_WORLD.bcast(data)
     data = th.load(io.BytesIO(data), **kwargs)
-    data = dist.broadcast(data, 0)
+    data = sync_params(data)
     return data
 
 
