@@ -41,7 +41,7 @@ def main():
 
     # Combine specified keys and values into a string
     identifier = '__'.join([f"{key}_{getattr(args, key)}" for key in vars(args) if key in keys_to_include])
-    save_dir = f"{args.save_dir}/{identifier}"
+    save_dir = f"{dict(args).save_dir}/{identifier}"
 
     # Set up logging
     logger.configure(dir=save_dir)
