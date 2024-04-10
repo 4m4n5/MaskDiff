@@ -419,8 +419,8 @@ def init_distributed_mode(args):
     torch.cuda.set_device(args.gpu)
     args.dist_backend = 'nccl'
 
-    os.environ['MASTER_ADDR'] = 'localhost'  # Example address (change it if needed)
-    os.environ['MASTER_PORT'] = '29600'
+    # os.environ['MASTER_ADDR'] = 'localhost'  # Example address (change it if needed)
+    # os.environ['MASTER_PORT'] = '29600'
 
     print('| distributed init (rank {}, word {}): {}'.format(
         args.rank, args.world_size, args.dist_url), flush=True)
