@@ -122,9 +122,7 @@ class TrainLoop:
             if dist.get_rank() == 0:
                 logger.log(f"loading model from checkpoint: {resume_checkpoint}...")
                 self.model.load_state_dict(
-                    dist_util.load_state_dict(
-                        resume_checkpoint, map_location=self.config.gpu
-                    )
+                    th.load(resume_checkpoint, map_location=self.config.gpu)
                 )
 
         dist_util.sync_params(self.model.parameters())
@@ -137,9 +135,7 @@ class TrainLoop:
         if ema_checkpoint:
             if dist.get_rank() == 0:
                 logger.log(f"loading EMA from checkpoint: {ema_checkpoint}...")
-                state_dict = dist_util.load_state_dict(
-                    ema_checkpoint, map_location=self.config.gpu
-                )
+                state_dict = th.load(ema_checkpoint, map_location=self.config.gpu)
                 ema_params = self._state_dict_to_master_params(state_dict)
 
         dist_util.sync_params(ema_params)
@@ -152,9 +148,7 @@ class TrainLoop:
         )
         if bf.exists(opt_checkpoint):
             logger.log(f"loading optimizer state from checkpoint: {opt_checkpoint}")
-            state_dict = dist_util.load_state_dict(
-                opt_checkpoint, map_location=self.config.gpu
-            )
+            state_dict = th.load(opt_checkpoint, map_location=self.config.gpu)
             self.opt.load_state_dict(state_dict)
 
     def _setup_fp16(self):
