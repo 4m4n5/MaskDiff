@@ -21,13 +21,23 @@ from improved_diffusion.script_util import (
 )
 
 
-def num_classes_to_labels(num_classes = 7):
+def num_classes_to_labels(num_classes = 7, fix_first_label=True):
+    nc = num_classes
+    if fix_first_label:
+        nc = num_classes - 1
     # Generate all possible combinations of class labels
-    all_labels = list(itertools.product([0, 1], repeat=num_classes))
+    all_labels = list(itertools.product([0, 1], repeat=nc))
     # Convert class labels to one-hot tensors
     one_hot_labels = [torch.tensor(label) for label in all_labels]
+    one_hot_labels = torch.stack(one_hot_labels).float()
+    
+    if fix_first_label:
+        # Create a tensor containing the constant value with the same shape as tensor_2d
+        constant_tensor = torch.full((one_hot_labels.size(0), 1), 1, dtype=one_hot_labels.dtype)
+        # Concatenate the constant tensor with the original tensor along the second dimension
+        one_hot_labels = torch.cat((constant_tensor, one_hot_labels), dim=1)
 
-    return torch.stack(one_hot_labels).float()
+    return one_hot_labels
 
 
 def main():
@@ -56,7 +66,10 @@ def main():
     while len(all_images) * args.batch_size < args.num_samples:
         model_kwargs = {}
         if args.class_cond:
-            model_kwargs["y"] = num_classes_to_labels(args.num_classes).to(device)
+            cond = num_classes_to_labels(args.num_classes).to(device)
+            assert args.batch_size % cond.size(0) == 0
+            num_repeat = args.batch_size // cond.size(0)
+            model_kwargs["y"] = cond.repeat(num_repeat, 1)
         sample_fn = (
             diffusion.p_sample_loop if not args.use_ddim else diffusion.ddim_sample_loop
         )
